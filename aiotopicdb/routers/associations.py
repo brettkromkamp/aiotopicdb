@@ -7,7 +7,7 @@ from ..models.language import Language
 
 store = get_store()
 
-router = APIRouter(prefix="/maps/{map_id}/associations", tags=["topics"],
+router = APIRouter(prefix="/maps/{map_id}/associations", tags=["associations"],
                    responses={404: {"description": "Not found"}})
 
 
