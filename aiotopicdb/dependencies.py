@@ -1,7 +1,7 @@
 import configparser
 import os
 
-from aiotopicdb.topics.core.store.topicstore import TopicStore
+from aiotopicdb.topics.store.topicstore import TopicStore
 
 SETTINGS_FILE_PATH = os.path.join(os.path.dirname(__file__), "settings.ini")
 

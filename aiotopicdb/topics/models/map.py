@@ -4,7 +4,7 @@ January 07, 2016
 Brett Alistair Kromkamp (brett.kromkamp@gmail.com)
 """
 
-from aiotopicdb.topics.core.models.collaborationmode import CollaborationMode
+from aiotopicdb.topics.models.collaborationmode import CollaborationMode
 
 
 class Map:

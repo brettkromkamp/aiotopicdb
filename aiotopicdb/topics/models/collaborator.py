@@ -4,7 +4,7 @@ April 08, 2020
 Brett Alistair Kromkamp (brett.kromkamp@gmail.com)
 """
 
-from aiotopicdb.topics.core.models.collaborationmode import CollaborationMode
+from aiotopicdb.topics.models.collaborationmode import CollaborationMode
 
 
 class Collaborator:

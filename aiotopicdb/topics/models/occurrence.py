@@ -8,9 +8,9 @@ Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 from typing import Optional, Union
 
 from slugify import slugify  # type: ignore
-from aiotopicdb.topics.core.models.entity import Entity
-from aiotopicdb.topics.core.models.language import Language
-from aiotopicdb.topics.core.topicdberror import TopicDbError
+from aiotopicdb.topics.models.entity import Entity
+from aiotopicdb.topics.models.language import Language
+from aiotopicdb.topics.topicdberror import TopicDbError
 
 UNIVERSAL_SCOPE = "*"
 

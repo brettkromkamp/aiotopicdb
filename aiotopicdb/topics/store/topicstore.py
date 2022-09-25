@@ -14,18 +14,18 @@ from typing import List, Optional
 import aiosqlite
 from typedtree.tree import Tree  # type: ignore
 
-from aiotopicdb.topics.core.models.association import Association
-from aiotopicdb.topics.core.models.attribute import Attribute
-from aiotopicdb.topics.core.models.basename import BaseName
-from aiotopicdb.topics.core.models.datatype import DataType
-from aiotopicdb.topics.core.models.doublekeydict import DoubleKeyDict
-from aiotopicdb.topics.core.models.language import Language
-from aiotopicdb.topics.core.models.map import Map
-from aiotopicdb.topics.core.models.member import Member
-from aiotopicdb.topics.core.models.occurrence import Occurrence
-from aiotopicdb.topics.core.models.topic import Topic
-from aiotopicdb.topics.core.store.retrievalmode import RetrievalMode
-from aiotopicdb.topics.core.topicdberror import TopicDbError
+from aiotopicdb.topics.models.association import Association
+from aiotopicdb.topics.models.attribute import Attribute
+from aiotopicdb.topics.models.basename import BaseName
+from aiotopicdb.topics.models.datatype import DataType
+from aiotopicdb.topics.models.doublekeydict import DoubleKeyDict
+from aiotopicdb.topics.models.language import Language
+from aiotopicdb.topics.models.map import Map
+from aiotopicdb.topics.models.member import Member
+from aiotopicdb.topics.models.occurrence import Occurrence
+from aiotopicdb.topics.models.topic import Topic
+from aiotopicdb.topics.store.retrievalmode import RetrievalMode
+from aiotopicdb.topics.topicdberror import TopicDbError
 
 # endregion
 # region Constants

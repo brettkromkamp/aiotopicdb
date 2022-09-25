@@ -7,10 +7,10 @@ Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 
 from typing import List, Optional
 
-from aiotopicdb.topics.core.models.basename import BaseName
-from aiotopicdb.topics.core.models.entity import Entity
-from aiotopicdb.topics.core.models.language import Language
-from aiotopicdb.topics.core.models.occurrence import Occurrence
+from aiotopicdb.topics.models.basename import BaseName
+from aiotopicdb.topics.models.entity import Entity
+from aiotopicdb.topics.models.language import Language
+from aiotopicdb.topics.models.occurrence import Occurrence
 
 UNIVERSAL_SCOPE = "*"
 
