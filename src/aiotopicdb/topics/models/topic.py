@@ -17,14 +17,14 @@ UNIVERSAL_SCOPE = "*"
 
 class Topic(Entity):
     def __init__(
-        self,
-        identifier: str = "",
-        instance_of: str = "topic",
-        name: str = "Undefined",
-        # Universal scope is "*". What's more, 'scope' in this context is referring to the scope of the topic's
-        # base name objects. Topics, as such, do not have scope.
-        scope: str = UNIVERSAL_SCOPE,
-        language: Language = Language.ENG,
+            self,
+            identifier: str = "",
+            instance_of: str = "topic",
+            name: str = "Undefined",
+            # Universal scope is "*". What's more, 'scope' in this context is referring to the scope of the topic's
+            # base name objects. Topics, as such, do not have scope.
+            scope: str = UNIVERSAL_SCOPE,
+            language: Language = Language.ENG,
     ) -> None:
         super().__init__(identifier, instance_of)
 

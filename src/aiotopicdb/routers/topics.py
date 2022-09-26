@@ -31,7 +31,7 @@ async def get_topic_occurrences(map_id: int, topic_id: str, instance_of: str = N
                                 resolve_attributes: RetrievalMode = None):
     result = []
     occurrences = await store.get_topic_occurrences(map_id, topic_id, instance_of, scope, language,
-                                                 inline_resource_data, resolve_attributes)
+                                                    inline_resource_data, resolve_attributes)
     if not occurrences:
         raise HTTPException(status_code=404, detail="Occurrences not found")
     for occurrence in occurrences:

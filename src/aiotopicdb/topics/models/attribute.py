@@ -8,6 +8,7 @@ Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 import uuid
 
 from slugify import slugify  # type: ignore
+
 from aiotopicdb.topics.models.datatype import DataType
 from aiotopicdb.topics.models.language import Language
 from aiotopicdb.topics.topicdberror import TopicDbError
@@ -17,14 +18,14 @@ UNIVERSAL_SCOPE = "*"
 
 class Attribute:
     def __init__(
-        self,
-        name: str,
-        value: str,
-        entity_identifier: str,
-        identifier: str = "",
-        data_type: DataType = DataType.STRING,
-        scope: str = UNIVERSAL_SCOPE,
-        language: Language = Language.ENG,
+            self,
+            name: str,
+            value: str,
+            entity_identifier: str,
+            identifier: str = "",
+            data_type: DataType = DataType.STRING,
+            scope: str = UNIVERSAL_SCOPE,
+            language: Language = Language.ENG,
     ) -> None:
         self.__entity_identifier = (
             entity_identifier if entity_identifier == UNIVERSAL_SCOPE else slugify(str(entity_identifier))

@@ -8,6 +8,7 @@ Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 from typing import Optional, Union
 
 from slugify import slugify  # type: ignore
+
 from aiotopicdb.topics.models.entity import Entity
 from aiotopicdb.topics.models.language import Language
 from aiotopicdb.topics.topicdberror import TopicDbError
@@ -17,14 +18,14 @@ UNIVERSAL_SCOPE = "*"
 
 class Occurrence(Entity):
     def __init__(
-        self,
-        identifier: str = "",
-        instance_of: str = "occurrence",
-        topic_identifier: str = "",
-        scope: str = UNIVERSAL_SCOPE,
-        resource_ref: str = "",
-        resource_data: Optional[Union[str, bytes]] = None,
-        language: Language = Language.ENG,
+            self,
+            identifier: str = "",
+            instance_of: str = "occurrence",
+            topic_identifier: str = "",
+            scope: str = UNIVERSAL_SCOPE,
+            resource_ref: str = "",
+            resource_data: Optional[Union[str, bytes]] = None,
+            language: Language = Language.ENG,
     ) -> None:
         super().__init__(identifier, instance_of)
 

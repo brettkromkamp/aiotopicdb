@@ -6,6 +6,7 @@ Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 """
 
 from slugify import slugify  # type: ignore
+
 from aiotopicdb.topics.models.language import Language
 from aiotopicdb.topics.models.member import Member
 from aiotopicdb.topics.models.topic import Topic
@@ -16,16 +17,16 @@ UNIVERSAL_SCOPE = "*"
 
 class Association(Topic):
     def __init__(
-        self,
-        identifier: str = "",
-        instance_of: str = "association",
-        name: str = "Undefined",
-        language: Language = Language.ENG,
-        scope: str = UNIVERSAL_SCOPE,
-        src_topic_ref: str = "",
-        src_role_spec: str = "related",
-        dest_topic_ref: str = "",
-        dest_role_spec: str = "related",
+            self,
+            identifier: str = "",
+            instance_of: str = "association",
+            name: str = "Undefined",
+            language: Language = Language.ENG,
+            scope: str = UNIVERSAL_SCOPE,
+            src_topic_ref: str = "",
+            src_role_spec: str = "related",
+            dest_topic_ref: str = "",
+            dest_role_spec: str = "related",
     ) -> None:
         super().__init__(identifier, instance_of, name, scope, language)  # Base name 'scope' parameter
 

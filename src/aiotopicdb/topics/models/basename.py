@@ -8,6 +8,7 @@ Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 import uuid
 
 from slugify import slugify  # type: ignore
+
 from aiotopicdb.topics.models.language import Language
 from aiotopicdb.topics.topicdberror import TopicDbError
 
@@ -16,11 +17,11 @@ UNIVERSAL_SCOPE = "*"
 
 class BaseName:
     def __init__(
-        self,
-        name: str,
-        scope: str = UNIVERSAL_SCOPE,
-        language: Language = Language.ENG,
-        identifier: str = "",
+            self,
+            name: str,
+            scope: str = UNIVERSAL_SCOPE,
+            language: Language = Language.ENG,
+            identifier: str = "",
     ) -> None:
         self.__identifier = str(uuid.uuid4()) if identifier == "" else slugify(str(identifier))
 

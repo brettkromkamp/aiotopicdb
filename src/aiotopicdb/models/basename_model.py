@@ -12,4 +12,3 @@ class BaseNameModel(BaseModel):
 
     class Config:
         orm_mode = True
-
