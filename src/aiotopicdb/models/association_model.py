@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 from aiotopicdb.models.attribute_model import AttributeModel
 from aiotopicdb.models.basename_model import BaseNameModel
-from aiotopicdb.models.language import Language
 from aiotopicdb.models.member_model import MemberModel
 from aiotopicdb.models.occurrence_model import OccurrenceModel
 
