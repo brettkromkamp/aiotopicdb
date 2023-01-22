@@ -5,10 +5,10 @@ December 28, 2016
 Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 """
 
-from enum import Enum
+from enum import IntEnum
 
 
-class OntologyMode(Enum):
+class OntologyMode(IntEnum):
     STRICT = 1
     LENIENT = 2
 
