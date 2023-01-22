@@ -14,6 +14,7 @@ from typing import List, Optional
 import aiosqlite
 from typedtree.tree import Tree  # type: ignore
 
+from aiotopicdb.retrievalmode import RetrievalMode
 from aiotopicdb.topics.models.association import Association
 from aiotopicdb.topics.models.attribute import Attribute
 from aiotopicdb.topics.models.basename import BaseName
@@ -24,7 +25,6 @@ from aiotopicdb.topics.models.map import Map
 from aiotopicdb.topics.models.member import Member
 from aiotopicdb.topics.models.occurrence import Occurrence
 from aiotopicdb.topics.models.topic import Topic
-from aiotopicdb.topics.store.retrievalmode import RetrievalMode
 from aiotopicdb.topics.topicdberror import TopicDbError
 
 # endregion

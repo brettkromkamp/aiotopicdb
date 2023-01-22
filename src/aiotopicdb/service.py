@@ -1,7 +1,10 @@
+
+import uvicorn
+
 from fastapi import FastAPI
 
-from .routers import attributes, occurrences, topics, associations, maps
-from .version import __version__
+from aiotopicdb.routers import attributes, occurrences, topics, associations, maps
+from aiotopicdb.version import __version__
 
 app = FastAPI()
 
@@ -15,3 +18,6 @@ app.include_router(maps.router)
 @app.get("/")
 async def root():
     return {"message": f"TopicDB API Service, version {__version__}"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

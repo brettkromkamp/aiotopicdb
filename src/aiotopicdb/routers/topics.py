@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from .retrievalmode import RetrievalMode
+from ..retrievalmode import RetrievalMode
 from ..dependencies import get_store
 from ..models.association_model import AssociationModel
 from ..models.language import Language
@@ -15,9 +15,9 @@ router = APIRouter(prefix="/maps/{map_id}/topics", tags=["topics"],
 
 @router.get("/{topic_id}")
 async def get_topic(map_id: int, topic_id: str, scope: str = None, language: Language = None,
-                    inline_resource_data: RetrievalMode = None,
-                    resolve_attributes: RetrievalMode = None):
-    topic = await store.get_topic(map_id, topic_id, scope, language, inline_resource_data, resolve_attributes)
+                    resolve_attributes: RetrievalMode = None,
+                    resolve_occurrences: RetrievalMode = None):
+    topic = await store.get_topic(map_id, topic_id, scope, language, resolve_attributes, resolve_occurrences)
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
     result = TopicModel.from_orm(topic)

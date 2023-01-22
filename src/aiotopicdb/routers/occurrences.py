@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from .retrievalmode import RetrievalMode
+from ..retrievalmode import RetrievalMode
 from ..dependencies import get_store
 from ..models.occurrence_model import OccurrenceModel
 
