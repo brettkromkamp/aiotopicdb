@@ -2,11 +2,24 @@
 import uvicorn
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from aiotopicdb.routers import attributes, occurrences, topics, associations, maps
 from aiotopicdb.version import __version__
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:4200"  # TODO: Angular frontend application
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(attributes.router)
 app.include_router(occurrences.router)

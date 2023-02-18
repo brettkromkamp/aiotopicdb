@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 
 class MapModel(BaseModel):
+    identifier: int
     name: str
     description: str
     image_path: str
