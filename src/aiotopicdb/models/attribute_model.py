@@ -16,4 +16,4 @@ class AttributeModel(BaseModel):
     language: Language = Language.ENG
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -22,8 +22,10 @@ class TopicModel(BaseModel):
         if len(self.base_names) > 0:
             result = self.base_names[0]
         else:
-            result = BaseNameModel(name="Undefined", scope=_UNIVERSAL_SCOPE, language=Language.ENG)
+            result = BaseNameModel(
+                name="Undefined", scope=_UNIVERSAL_SCOPE, language=Language.ENG
+            )
         return result
 
     class Config:
-        orm_mode = True
+        from_attributes = True

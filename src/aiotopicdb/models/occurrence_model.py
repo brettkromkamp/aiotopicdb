@@ -19,4 +19,4 @@ class OccurrenceModel(BaseModel):
     attributes: List[AttributeModel] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True

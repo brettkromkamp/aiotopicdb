@@ -8,4 +8,4 @@ class MemberModel(BaseModel):
     dest_role_spec: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

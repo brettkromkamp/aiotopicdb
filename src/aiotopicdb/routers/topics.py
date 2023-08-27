@@ -9,49 +9,83 @@ from ..models.topic_model import TopicModel
 
 store = get_store()
 
-router = APIRouter(prefix="/maps/{map_id}/topics", tags=["topics"],
-                   responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/maps/{map_id}/topics",
+    tags=["topics"],
+    responses={404: {"description": "Not found"}},
+)
 
 
 @router.get("/{topic_id}")
-async def get_topic(map_id: int, topic_id: str, scope: str = None, language: Language = None,
-                    resolve_attributes: RetrievalMode = None,
-                    resolve_occurrences: RetrievalMode = None):
-    topic = await store.get_topic(map_id, topic_id, scope, language, resolve_attributes, resolve_occurrences)
+async def get_topic(
+    map_id: int,
+    topic_id: str,
+    scope: str = None,
+    language: Language = None,
+    resolve_attributes: RetrievalMode = None,
+    resolve_occurrences: RetrievalMode = None,
+):
+    topic = await store.get_topic(
+        map_id, topic_id, scope, language, resolve_attributes, resolve_occurrences
+    )
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
-    result = TopicModel.from_orm(topic)
+    result = TopicModel.model_validate(topic)
     return result
 
 
 @router.get("/{topic_id}/occurrences")
-async def get_topic_occurrences(map_id: int, topic_id: str, instance_of: str = None, scope: str = None,
-                                language: Language = None,
-                                inline_resource_data: RetrievalMode = None,
-                                resolve_attributes: RetrievalMode = None):
+async def get_topic_occurrences(
+    map_id: int,
+    topic_id: str,
+    instance_of: str = None,
+    scope: str = None,
+    language: Language = None,
+    inline_resource_data: RetrievalMode = None,
+    resolve_attributes: RetrievalMode = None,
+):
     result = []
-    occurrences = await store.get_topic_occurrences(map_id, topic_id, instance_of, scope, language,
-                                                    inline_resource_data, resolve_attributes)
+    occurrences = await store.get_topic_occurrences(
+        map_id,
+        topic_id,
+        instance_of,
+        scope,
+        language,
+        inline_resource_data,
+        resolve_attributes,
+    )
     if not occurrences:
         raise HTTPException(status_code=404, detail="Occurrences not found")
     for occurrence in occurrences:
-        result.append(OccurrenceModel.from_orm(occurrence))
+        result.append(OccurrenceModel.model_validate(occurrence))
     return result
 
 
 @router.get("/{topic_id}/associations")
-async def get_topic_associations(map_id: int, topic_id: str, instance_of: str = None, scope: str = None,
-                                 language: Language = None,
-                                 inline_resource_data: RetrievalMode = None,
-                                 resolve_attributes: RetrievalMode = None):
+async def get_topic_associations(
+    map_id: int,
+    topic_id: str,
+    instance_of: str = None,
+    scope: str = None,
+    language: Language = None,
+    inline_resource_data: RetrievalMode = None,
+    resolve_attributes: RetrievalMode = None,
+):
     result = []
-    associations = await store.get_topic_associations(map_id, topic_id, instance_of, scope, language,
-                                                      inline_resource_data, resolve_attributes)
+    associations = await store.get_topic_associations(
+        map_id,
+        topic_id,
+        instance_of,
+        scope,
+        language,
+        inline_resource_data,
+        resolve_attributes,
+    )
     if not associations:
         raise HTTPException(status_code=404, detail="Associations not found")
 
     for association in associations:
-        result.append(AssociationModel.from_orm(association))
+        result.append(AssociationModel.model_validate(association))
     return result
 
 
@@ -64,10 +98,14 @@ async def get_topic_tags(map_id: int, topic_id: str):
 
 
 @router.get("/{topic_id}/association-groups")
-async def get_association_groups(map_id: int, topic_id: str, scope_id: str = "*", scope_filtered: int = 0):
+async def get_association_groups(
+    map_id: int, topic_id: str, scope_id: str = "*", scope_filtered: int = 0
+):
     result = []
     if scope_filtered:
-        associations = await store.get_association_groups(map_id, topic_id, scope=scope_id)
+        associations = await store.get_association_groups(
+            map_id, topic_id, scope=scope_id
+        )
     else:
         associations = await store.get_association_groups(map_id, topic_id)
     if not associations:
