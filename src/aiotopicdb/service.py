@@ -1,4 +1,3 @@
-
 import uvicorn
 
 from fastapi import FastAPI
@@ -10,7 +9,8 @@ from aiotopicdb.version import __version__
 app = FastAPI()
 
 origins = [
-    "http://localhost:4200"  # TODO: Angular frontend application
+    "http://localhost:4200",  # Angular
+    "http://localhost:5173",  # Vite
 ]
 
 app.add_middleware(
@@ -31,6 +31,7 @@ app.include_router(maps.router)
 @app.get("/")
 async def root():
     return {"message": f"TopicDB API Service, version {__version__}"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
