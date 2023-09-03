@@ -39,3 +39,11 @@ async def get_map(map_id: int):
         raise HTTPException(status_code=404, detail="Topic map not found")
     result = MapModel.model_validate(topic_map)
     return result
+
+
+@router.get("/{map_id}/topic-names")
+async def get_topic_names(map_id: int, offset: int = 0, limit: int = 100):
+    topic_names = await store.get_topic_names(map_id, offset=offset, limit=limit)
+    if not topic_names:
+        raise HTTPException(status_code=404, detail="Topic names not found")
+    return topic_names

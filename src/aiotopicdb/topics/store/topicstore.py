@@ -9,7 +9,7 @@ Brett Alistair Kromkamp (brettkromkamp@gmail.com)
 from __future__ import annotations
 
 from collections import namedtuple
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import aiosqlite
 from typedtree.tree import Tree  # type: ignore
@@ -730,6 +730,35 @@ class TopicStore:
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error retrieving associations: {error}")
 
+        return result
+
+    async def get_topic_names(
+        self,
+        map_identifier: int,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> List[Tuple[str, str]]:
+        result = []
+        sql = """SELECT basename.name AS name, topic.identifier AS identifier
+            FROM topic
+            JOIN basename ON topic.identifier = basename.topic_identifier
+            WHERE basename.map_identifier = ?
+            AND topic.map_identifier = ?
+            AND topic.scope IS NULL
+            ORDER BY basename.name
+            LIMIT ? OFFSET ?"""
+        try:
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                async with db.execute(
+                    sql, (map_identifier, map_identifier, limit, offset)
+                ) as cursor:
+                    async for record in cursor:
+                        result.append(
+                            {"name": record["name"], "identifier": record["identifier"]}
+                        )
+        except aiosqlite.Error as error:
+            raise TopicDbError(f"Error retrieving topic names: {error}")
         return result
 
     # endregion
