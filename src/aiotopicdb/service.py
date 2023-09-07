@@ -9,13 +9,13 @@ from aiotopicdb.version import __version__
 app = FastAPI()
 
 origins = [
-    "http://localhost:4200",  # Angular
-    "http://localhost:5173",  # Vite
+    "http://localhost:4200",
+    "http://localhost:5173",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins="*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
