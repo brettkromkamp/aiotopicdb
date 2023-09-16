@@ -6,6 +6,7 @@ from ..models.association_model import AssociationModel
 from ..models.language import Language
 from ..models.occurrence_model import OccurrenceModel
 from ..models.topic_model import TopicModel
+from ..models.basename_model import BaseNameModel
 
 store = get_store()
 
@@ -140,4 +141,20 @@ async def get_association_groups(
                     "roles": result_roles,
                 }
             )
+    return result
+
+
+@router.get("/{topic_id}/names")
+async def get_topic_names(
+    map_id: int,
+    topic_id: str,
+    scope: str = None,
+    language: Language = None,
+):
+    result = []
+    names = await store.get_topic_names(map_id, topic_id, scope, language)
+    if not names:
+        raise HTTPException(status_code=404, detail="Topic names not found")
+    for name in names:
+        result.append(BaseNameModel.model_validate(name))
     return result

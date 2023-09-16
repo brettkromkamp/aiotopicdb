@@ -129,59 +129,16 @@ class TopicStore:
                             instance_of=association_record["instance_of"],
                             scope=association_record["scope"],
                         )
+                        # Base names
                         result.clear_base_names()
-                        if scope:
-                            if language:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier = ? AND
-                                                    topic_identifier = ? AND
-                                                    scope = ? AND
-                                                    language = ?"""
-                                bind_variables = (
-                                    map_identifier,
-                                    identifier,
-                                    scope,
-                                    language.name.lower(),
-                                )
-                            else:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier =? AND
-                                                    topic_identifier = ? AND
-                                                    scope = ?"""
-                                bind_variables = (map_identifier, identifier, scope)
-                        else:
-                            if language:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier = ? AND
-                                                    topic_identifier = ? AND
-                                                    language = ?"""
-                                bind_variables = (
-                                    map_identifier,
-                                    identifier,
-                                    language.name.lower(),
-                                )
-                            else:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier = ? AND
-                                                    topic_identifier = ?"""
-                                bind_variables = (map_identifier, identifier)
-                        # Base name records
-                        async with db.execute(sql, bind_variables) as base_name_cursor:
-                            async for base_name_record in base_name_cursor:
-                                result.add_base_name(
-                                    BaseName(
-                                        base_name_record["name"],
-                                        base_name_record["scope"],
-                                        Language[
-                                            base_name_record["language"].upper()
-                                        ].value,
-                                        base_name_record["identifier"],
-                                    )
-                                )
+                        base_names = await self.get_topic_names(
+                            map_identifier,
+                            identifier,
+                            scope,
+                            language,
+                        )
+                        for base_name in base_names:
+                            result.add_base_name(base_name)
                         # Member record
                         async with db.execute(
                             "SELECT * FROM member WHERE map_identifier = ? AND association_identifier = ?",
@@ -484,58 +441,14 @@ class TopicStore:
                         result = Topic(
                             topic_record["identifier"], topic_record["instance_of"]
                         )
+                        # Base names
                         result.clear_base_names()
-                        if scope:
-                            if language:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier = ? AND
-                                                    topic_identifier = ? AND
-                                                    scope = ? AND
-                                                    language = ?"""
-                                bind_variables = (
-                                    map_identifier,
-                                    identifier,
-                                    scope,
-                                    language.name.lower(),
-                                )
-                            else:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier = ? AND
-                                                    topic_identifier = ? AND
-                                                    scope = ?"""
-                                bind_variables = (map_identifier, identifier, scope)
-                        else:
-                            if language:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier = ? AND
-                                                    topic_identifier = ? AND
-                                                    language = ?"""
-                                bind_variables = (
-                                    map_identifier,
-                                    identifier,
-                                    language.name.lower(),
-                                )
-                            else:
-                                sql = """SELECT name, scope, language, identifier
-                                                    FROM basename
-                                                    WHERE map_identifier = ? AND
-                                                    topic_identifier = ?"""
-                                bind_variables = (map_identifier, identifier)
-                        async with db.execute(sql, bind_variables) as base_name_cursor:
-                            async for base_name_record in base_name_cursor:
-                                result.add_base_name(
-                                    BaseName(
-                                        base_name_record["name"],
-                                        base_name_record["scope"],
-                                        Language[
-                                            base_name_record["language"].upper()
-                                        ].value,
-                                        base_name_record["identifier"],
-                                    )
-                                )
+                        base_names = await self.get_topic_names(
+                            map_identifier, identifier
+                        )
+                        for base_name in base_names:
+                            result.add_base_name(base_name)
+                        # Attributes
                         if (
                             resolve_attributes
                             and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
@@ -543,6 +456,7 @@ class TopicStore:
                             result.add_attributes(
                                 await self.get_attributes(map_identifier, identifier)
                             )
+                        # Occurrences
                         if (
                             resolve_occurrences
                             and resolve_occurrences is RetrievalMode.RESOLVE_OCCURRENCES
@@ -735,31 +649,102 @@ class TopicStore:
     async def get_topic_names(
         self,
         map_identifier: int,
-        offset: int = 0,
-        limit: int = 100,
-    ) -> List[Tuple[str, str]]:
+        identifier: str,
+        scope: str = None,
+        language: Language = None,
+    ) -> List[BaseName]:
         result = []
-        sql = """SELECT basename.name AS name, topic.identifier AS identifier
-            FROM topic
-            JOIN basename ON topic.identifier = basename.topic_identifier
-            WHERE basename.map_identifier = ?
-            AND topic.map_identifier = ?
-            AND topic.scope IS NULL
-            ORDER BY basename.name
-            LIMIT ? OFFSET ?"""
+        if scope:
+            if language:
+                sql = """SELECT name, scope, language, identifier
+                                FROM basename
+                                WHERE map_identifier = ? AND
+                                topic_identifier = ? AND
+                                scope = ? AND
+                                language = ?"""
+                bind_variables = (
+                    map_identifier,
+                    identifier,
+                    scope,
+                    language.name.lower(),
+                )
+            else:
+                sql = """SELECT name, scope, language, identifier
+                                FROM basename
+                                WHERE map_identifier = ? AND
+                                topic_identifier = ? AND
+                                scope = ?"""
+                bind_variables = (
+                    map_identifier,
+                    identifier,
+                    scope,
+                )
+        else:
+            if language:
+                sql = """SELECT name, scope, language, identifier
+                                  FROM basename
+                                  WHERE map_identifier = ? AND
+                                  topic_identifier = ? AND
+                                  language = ?"""
+                bind_variables = (
+                    map_identifier,
+                    identifier,
+                    language.name.lower(),
+                )
+            else:
+                sql = """SELECT name, scope, language, identifier
+                                  FROM basename
+                                  WHERE map_identifier = ? AND
+                                  topic_identifier = ?"""
+                bind_variables = (
+                    map_identifier,
+                    identifier,
+                )
         try:
             async with aiosqlite.connect(self.database_path) as db:
                 db.row_factory = aiosqlite.Row
-                async with db.execute(
-                    sql, (map_identifier, map_identifier, limit, offset)
-                ) as cursor:
-                    async for record in cursor:
-                        result.append(
-                            {"name": record["name"], "identifier": record["identifier"]}
+                async with db.execute(sql, bind_variables) as name_cursor:
+                    async for name_record in name_cursor:
+                        base_name = BaseName(
+                            name=name_record["name"],
+                            scope=name_record["scope"],
+                            language=Language[name_record["language"].upper()].value,
+                            identifier=name_record["identifier"],
                         )
+                        result.append(base_name)
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error retrieving topic names: {error}")
+
         return result
+
+    # async def get_topic_names(
+    #     self,
+    #     map_identifier: int,
+    #     offset: int = 0,
+    #     limit: int = 100,
+    # ) -> List[Tuple[str, str]]:
+    #     result = []
+    #     sql = """SELECT basename.name AS name, topic.identifier AS identifier
+    #         FROM topic
+    #         JOIN basename ON topic.identifier = basename.topic_identifier
+    #         WHERE basename.map_identifier = ?
+    #         AND topic.map_identifier = ?
+    #         AND topic.scope IS NULL
+    #         ORDER BY basename.name
+    #         LIMIT ? OFFSET ?"""
+    #     try:
+    #         async with aiosqlite.connect(self.database_path) as db:
+    #             db.row_factory = aiosqlite.Row
+    #             async with db.execute(
+    #                 sql, (map_identifier, map_identifier, limit, offset)
+    #             ) as cursor:
+    #                 async for record in cursor:
+    #                     result.append(
+    #                         {"name": record["name"], "identifier": record["identifier"]}
+    #                     )
+    #     except aiosqlite.Error as error:
+    #         raise TopicDbError(f"Error retrieving topic names: {error}")
+    #     return result
 
     # endregion
 
