@@ -1,0 +1,46 @@
+# https://developers.lseg.com/en/article-catalog/article/how-to-test-refinitiv-data-platform-rest-api-easily-with-visual-studio-code
+
+@baseUrl = http://192.168.221.138:8000
+@topicId = home
+@associationId = undefined
+@occurrenceId = undefined
+@attributeId = undefined
+@mapId = 1
+
+### Get Topic
+GET {{baseUrl}}/maps/{{mapId}}/topics/{{topicId}}
+
+### Get Topic Occurrences
+GET {{baseUrl}}/maps/{{mapId}}/topics/{{topicId}}/occurrences
+
+### Get Topic Associations
+{{baseUrl}}/maps/{{mapId}}/topics/{{topicId}}/associations
+### Get Topic Tags
+{{baseUrl}}/maps/{{mapId}}/topics/{{topicId}}/tags
+
+### Get Topic Association Groups
+{{baseUrl}}/maps/{{mapId}}/topics/{{topicId}}/association-groups
+
+### Get Topic Names
+{{baseUrl}}/maps/{{mapId}}/topics/{{topicId}}/names
+
+### Get Association
+{{baseUrl}}/maps/{{mapId}}/associations/{{associationId}}
+
+### Get Occurrence
+{{baseUrl}}/maps/{{mapId}}/occurrences/{{occurrenceId}}
+
+#### Get Attributes
+{{baseUrl}}/maps/{{mapId}}/attributes/{{occurrenceId}}
+
+### Get Entity Attributes
+{{baseUrl}}/maps/{{mapId}}/attributes/{{topicId}}/entity-attributes
+
+### Get Map
+{{baseUrl}}/maps/{{mapId}}
+
+### Get Promoted Maps
+{{baseUrl}}/maps/promoted
+
+### Get Published Maps
+{{baseUrl}}/maps/published
