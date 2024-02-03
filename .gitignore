@@ -127,6 +127,7 @@ cython_debug/
 
 # SQLite 3
 *.db
+*.sqlite3
 
 # PyCharm
 .idea/
