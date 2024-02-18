@@ -33,4 +33,4 @@ async def get_attributes(
         raise HTTPException(status_code=404, detail="Attributes not found")
     for attribute in attributes:
         result.append(AttributeModel.model_validate(attribute))
-    return result
+    return {"map-identifier": map_id, "entity-identifier": entity_id, "attributes": result}

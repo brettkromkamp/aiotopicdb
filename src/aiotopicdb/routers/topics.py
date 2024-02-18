@@ -32,7 +32,7 @@ async def get_topic(
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
     result = TopicModel.model_validate(topic)
-    return result
+    return {"map-identifier": map_id, "topic-identifier": topic_id, "topic": result}
 
 
 @router.get("/{topic_id}/occurrences")
@@ -59,7 +59,7 @@ async def get_topic_occurrences(
         raise HTTPException(status_code=404, detail="Occurrences not found")
     for occurrence in occurrences:
         result.append(OccurrenceModel.model_validate(occurrence))
-    return result
+    return {"map-identifier": map_id, "topic-identifier": topic_id, "occurrences": result}
 
 
 @router.get("/{topic_id}/associations")
@@ -87,7 +87,7 @@ async def get_topic_associations(
 
     for association in associations:
         result.append(AssociationModel.model_validate(association))
-    return result
+    return {"map-identifier": map_id, "topic-identifier": topic_id, "associations": result}
 
 
 @router.get("/{topic_id}/tags")
@@ -95,7 +95,7 @@ async def get_topic_tags(map_id: int, topic_id: str):
     tags = await store.get_tags(map_id, topic_id)
     if not tags:
         raise HTTPException(status_code=404, detail="Tags not found")
-    return tags
+    return {"map-identifier": map_id, "topic-identifier": topic_id, "tags": tags}
 
 
 @router.get("/{topic_id}/association-groups")
@@ -141,7 +141,7 @@ async def get_association_groups(
                     "roles": result_roles,
                 }
             )
-    return result
+    return {"map-identifier": map_id, "topic-identifier": topic_id, "association-groups": result}
 
 
 @router.get("/{topic_id}/names")
@@ -157,4 +157,4 @@ async def get_topic_names(
         raise HTTPException(status_code=404, detail="Topic names not found")
     for name in names:
         result.append(BaseNameModel.model_validate(name))
-    return result
+    return {"map-identifier": map_id, "topic-identifier": topic_id, "topic-names": result}

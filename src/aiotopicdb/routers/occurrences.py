@@ -27,4 +27,4 @@ async def get_occurrence(
         raise HTTPException(status_code=404, detail="Occurrence not found")
     result = OccurrenceModel.model_validate(occurrence)
 
-    return result
+    return {"map-identifier": map_id, "occurrence-identifier": occurrence_id, "occurrence": result}

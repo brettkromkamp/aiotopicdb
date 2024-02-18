@@ -34,4 +34,4 @@ async def get_association(
     if not association:
         raise HTTPException(status_code=404, detail="Association not found")
     result = AssociationModel.model_validate(association)
-    return result
+    return {"map-identifier": map_id, "association-identifier": association_id, "association": result}

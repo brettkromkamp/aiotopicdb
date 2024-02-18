@@ -18,7 +18,7 @@ async def get_published_maps():
         raise HTTPException(status_code=404, detail="Published topic maps not found")
     for topic_map in topic_maps:
         result.append(MapModel.model_validate(topic_map))
-    return result
+    return {"published-maps": result}
 
 
 @router.get("/promoted")
@@ -29,7 +29,7 @@ async def get_promoted_maps():
         raise HTTPException(status_code=404, detail="Promoted topic maps not found")
     for topic_map in topic_maps:
         result.append(MapModel.model_validate(topic_map))
-    return result
+    return {"promoted-maps": result}
 
 
 @router.get("/{map_id}")
@@ -38,7 +38,7 @@ async def get_map(map_id: int):
     if not topic_map:
         raise HTTPException(status_code=404, detail="Topic map not found")
     result = MapModel.model_validate(topic_map)
-    return result
+    return {"map-identifier": map_id, "map": result}
 
 
 # @router.get("/{map_id}/topic-names")
