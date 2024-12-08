@@ -114,8 +114,12 @@ class TopicStore:
         identifier: str,
         scope: str | None = None,
         language: Language | None = None,
-        resolve_attributes: RetrievalMode | None = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
-        resolve_occurrences: RetrievalMode | None = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
+        resolve_attributes: (
+            RetrievalMode | None
+        ) = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
+        resolve_occurrences: (
+            RetrievalMode | None
+        ) = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
     ) -> Association | None:
         result = None
         try:
@@ -150,10 +154,22 @@ class TopicStore:
                                     identifier=member_record["identifier"],
                                 )
                                 result.member = member
-                        if resolve_attributes and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES:
-                            result.add_attributes(await self.get_attributes(map_identifier, identifier))
-                        if resolve_occurrences and resolve_occurrences is RetrievalMode.RESOLVE_OCCURRENCES:
-                            result.add_occurrences(await self.get_topic_occurrences(map_identifier, identifier))
+                        if (
+                            resolve_attributes
+                            and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
+                        ):
+                            result.add_attributes(
+                                await self.get_attributes(map_identifier, identifier)
+                            )
+                        if (
+                            resolve_occurrences
+                            and resolve_occurrences is RetrievalMode.RESOLVE_OCCURRENCES
+                        ):
+                            result.add_occurrences(
+                                await self.get_topic_occurrences(
+                                    map_identifier, identifier
+                                )
+                            )
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error fetching association: {error}")
 
@@ -168,7 +184,9 @@ class TopicStore:
         scope: str | None = None,
     ) -> DoubleKeyDict:
         if identifier == "" and associations is None:
-            raise TopicDbError("At least one of following parameters is required: 'identifier' or 'associations'")
+            raise TopicDbError(
+                "At least one of following parameters is required: 'identifier' or 'associations'"
+            )
 
         result = DoubleKeyDict()
         if not associations:
@@ -194,7 +212,16 @@ class TopicStore:
     # endregion
 
     # region Attribute
-    async def get_attribute(self, map_identifier: int, identifier: str) -> Attribute | None:
+    async def attribute_exists(
+        self, map_identifier: int, entity_identifier: str, name: str
+    ) -> bool:
+        result = False
+        # TODO: Implement
+        return result
+
+    async def get_attribute(
+        self, map_identifier: int, identifier: str
+    ) -> Attribute | None:
         result = None
         try:
             # Context managers automatically close the connection and the cursor
@@ -303,9 +330,12 @@ class TopicStore:
                         resource_data = None
                         if (
                             inline_resource_data
-                            and inline_resource_data.value is RetrievalMode.INLINE_RESOURCE_DATA.value
+                            and inline_resource_data
+                            is RetrievalMode.INLINE_RESOURCE_DATA
                         ):
-                            resource_data = await self.get_occurrence_data(map_identifier, identifier)
+                            resource_data = await self.get_occurrence_data(
+                                map_identifier, identifier
+                            )
                         result = Occurrence(
                             record["identifier"],
                             record["instance_of"],
@@ -315,13 +345,20 @@ class TopicStore:
                             resource_data,  # Type: bytes
                             Language[record["language"].upper()],
                         )
-                        if resolve_attributes and resolve_attributes.value is RetrievalMode.RESOLVE_ATTRIBUTES.value:
-                            result.add_attributes(await self.get_attributes(map_identifier, identifier))
+                        if (
+                            resolve_attributes
+                            and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
+                        ):
+                            result.add_attributes(
+                                await self.get_attributes(map_identifier, identifier)
+                            )
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error fetching occurrence: {error}")
         return result
 
-    async def get_occurrence_data(self, map_identifier: int, identifier: str) -> bytes | None:
+    async def get_occurrence_data(
+        self, map_identifier: int, identifier: str
+    ) -> bytes | None:
         result = None
         try:
             async with aiosqlite.connect(self.database_path) as db:
@@ -337,6 +374,26 @@ class TopicStore:
             raise TopicDbError(f"Error fetching occurrence data: {error}")
         return result
 
+    async def get_occurrences(
+        self,
+        map_identifier: int,
+        instance_of: str | None = None,
+        scope: str | None = None,
+        language: Language | None = None,
+        offset: int = 0,
+        limit: int = 100,
+        inline_resource_data: RetrievalMode = RetrievalMode.DONT_INLINE_RESOURCE_DATA,
+        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
+    ) -> list[Occurrence]:
+        result: list[Occurrence] = []
+        # TODO: Implement
+        return result
+
+    async def occurrence_exists(self, map_identifier: int, identifier: str) -> bool:
+        result = False
+        # TODO: Implement
+        return result
+
     # endregion
 
     # region Tag
@@ -345,7 +402,9 @@ class TopicStore:
 
         associations = await self.get_topic_associations(map_identifier, identifier)
         if associations:
-            groups = await self.get_association_groups(map_identifier, identifier, associations=associations)
+            groups = await self.get_association_groups(
+                map_identifier, identifier, associations=associations
+            )
             for instance_of in groups.dict:
                 for role in groups.dict[instance_of]:
                     for topic_ref in groups[instance_of, role]:
@@ -375,7 +434,9 @@ class TopicStore:
             map_identifier, identifier, instance_ofs=instance_ofs, scope=scope
         )
         if associations:
-            groups = await self.get_association_groups(map_identifier, identifier, associations=associations)
+            groups = await self.get_association_groups(
+                map_identifier, identifier, associations=associations
+            )
             for instance_of in groups.dict:
                 for role in groups.dict[instance_of]:
                     for topic_ref in groups[instance_of, role]:
@@ -404,17 +465,31 @@ class TopicStore:
                     (map_identifier, identifier),
                 ) as topic_cursor:
                     async for topic_record in topic_cursor:
-                        result = Topic(topic_record["identifier"], topic_record["instance_of"])
+                        result = Topic(
+                            topic_record["identifier"], topic_record["instance_of"]
+                        )
                         # Base names
                         result.clear_base_names()
                         # TODO: Add base names
                         # Attributes
-                        if resolve_attributes and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES:
-                            result.add_attributes(await self.get_attributes(map_identifier, identifier, scope=scope))
+                        if (
+                            resolve_attributes
+                            and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
+                        ):
+                            result.add_attributes(
+                                await self.get_attributes(
+                                    map_identifier, identifier, scope=scope
+                                )
+                            )
                         # Occurrences
-                        if resolve_occurrences and resolve_occurrences is RetrievalMode.RESOLVE_OCCURRENCES:
+                        if (
+                            resolve_occurrences
+                            and resolve_occurrences is RetrievalMode.RESOLVE_OCCURRENCES
+                        ):
                             result.add_occurrences(
-                                await self.get_topic_occurrences(map_identifier, identifier, scope=scope)
+                                await self.get_topic_occurrences(
+                                    map_identifier, identifier, scope=scope
+                                )
                             )
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error fetching topic: {error}")
@@ -487,11 +562,19 @@ class TopicStore:
         try:
             async with aiosqlite.connect(self.database_path) as db:
                 db.row_factory = aiosqlite.Row
-                async with db.execute(sql.format(query_filter), bind_variables) as cursor:
+                async with db.execute(
+                    sql.format(query_filter), bind_variables
+                ) as cursor:
                     async for record in cursor:
                         resource_data = None
-                        if inline_resource_data and inline_resource_data is RetrievalMode.INLINE_RESOURCE_DATA:
-                            resource_data = await self.get_occurrence_data(map_identifier, record["identifier"])
+                        if (
+                            inline_resource_data
+                            and inline_resource_data
+                            is RetrievalMode.INLINE_RESOURCE_DATA
+                        ):
+                            resource_data = await self.get_occurrence_data(
+                                map_identifier, record["identifier"]
+                            )
                         occurrence = Occurrence(
                             record["identifier"],
                             record["instance_of"],
@@ -501,8 +584,15 @@ class TopicStore:
                             resource_data,  # Type: bytes
                             Language[record["language"].upper()],
                         )
-                        if resolve_attributes and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES:
-                            occurrence.add_attributes(await self.get_attributes(map_identifier, occurrence.identifier))
+                        if (
+                            resolve_attributes
+                            and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
+                        ):
+                            occurrence.add_attributes(
+                                await self.get_attributes(
+                                    map_identifier, occurrence.identifier
+                                )
+                            )
                         result.append(occurrence)
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error fetching occurrences: {error}")
@@ -534,11 +624,17 @@ class TopicStore:
             if scope:
                 query_filter = instance_of_in_condition + " AND scope = ? "
                 bind_variables = (
-                    (map_identifier,) + tuple(instance_ofs) + (scope, map_identifier, identifier, identifier)
+                    (map_identifier,)
+                    + tuple(instance_ofs)
+                    + (scope, map_identifier, identifier, identifier)
                 )
             else:
                 query_filter = instance_of_in_condition
-                bind_variables = (map_identifier,) + tuple(instance_ofs) + (map_identifier, identifier, identifier)
+                bind_variables = (
+                    (map_identifier,)
+                    + tuple(instance_ofs)
+                    + (map_identifier, identifier, identifier)
+                )
         else:
             if scope:
                 query_filter = " AND scope = ?"
@@ -560,7 +656,9 @@ class TopicStore:
         try:
             async with aiosqlite.connect(self.database_path) as db:
                 db.row_factory = aiosqlite.Row
-                async with db.execute(sql.format(query_filter), bind_variables) as cursor:
+                async with db.execute(
+                    sql.format(query_filter), bind_variables
+                ) as cursor:
                     async for record in cursor:
                         association = await self.get_association(
                             map_identifier,
@@ -576,7 +674,20 @@ class TopicStore:
 
         return result
 
-    async def get_topic_names(self, map_identifier: int, offset: int = 0, limit: int = 100) -> list[Tuple[str, str]]:
+    async def get_topic_associations_count(
+        self,
+        map_identifier: int,
+        identifier: str,
+        instance_ofs: list[str] | None = None,
+        scope: str | None = None,
+    ) -> int:
+        result = 0
+        # TODO: Implement
+        return result
+
+    async def get_topic_names(
+        self, map_identifier: int, offset: int = 0, limit: int = 100
+    ) -> list[Tuple[str, str]]:
         result: list[Tuple[str, str]] = []
         # TODO: Implement
         return result
@@ -584,7 +695,9 @@ class TopicStore:
     # endregion
 
     # region Topic Map
-    async def get_map(self, map_identifier: int, user_identifier: int | None = None) -> Map | None:
+    async def get_map(
+        self, map_identifier: int, user_identifier: int | None = None
+    ) -> Map | None:
         result = None
         if user_identifier:
             sql = """SELECT
@@ -613,9 +726,15 @@ class TopicStore:
                 async with db.execute(sql, bind_variables) as cursor:
                     async for record in cursor:
                         result = Map(
-                            record["map_identifier"] if user_identifier else record["identifier"],
+                            (
+                                record["map_identifier"]
+                                if user_identifier
+                                else record["identifier"]
+                            ),
                             record["name"],
-                            user_identifier=record["user_identifier"] if user_identifier else None,
+                            user_identifier=(
+                                record["user_identifier"] if user_identifier else None
+                            ),
                             description=record["description"],
                             image_path=record["image_path"],
                             initialised=record["initialised"],
@@ -623,7 +742,9 @@ class TopicStore:
                             promoted=record["promoted"],
                             owner=record["owner"] if user_identifier else None,
                             collaboration_mode=(
-                                CollaborationMode[record["collaboration_mode"].upper()] if user_identifier else None
+                                CollaborationMode[record["collaboration_mode"].upper()]
+                                if user_identifier
+                                else None
                             ),
                         )
         except aiosqlite.Error as error:
@@ -671,7 +792,9 @@ class TopicStore:
                             published=record["published"],
                             promoted=record["promoted"],
                             owner=record["owner"],
-                            collaboration_mode=CollaborationMode[record["collaboration_mode"].upper()],
+                            collaboration_mode=CollaborationMode[
+                                record["collaboration_mode"].upper()
+                            ],
                         )
                         result.append(map)
         except aiosqlite.Error as error:
@@ -701,7 +824,9 @@ class TopicStore:
     async def stop_collaboration(self, map_identifier: int) -> None:
         pass
 
-    async def get_collaboration_mode(self, map_identifier: int, user_identifier: int) -> CollaborationMode | None:
+    async def get_collaboration_mode(
+        self, map_identifier: int, user_identifier: int
+    ) -> CollaborationMode | None:
         result = None
         try:
             async with aiosqlite.connect(self.database_path) as db:
