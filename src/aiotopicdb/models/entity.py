@@ -9,10 +9,9 @@ import uuid
 
 from slugify import slugify  # type: ignore
 
-from aiotopicdb.topics.models.attribute import Attribute
-from aiotopicdb.topics.topicdberror import TopicDbError
-
-from ..constants import UNIVERSAL_SCOPE
+from aiotopicdb.constants import UNIVERSAL_SCOPE
+from aiotopicdb.models.attribute import Attribute
+from aiotopicdb.topicdberror import TopicDbError
 
 
 class Entity:

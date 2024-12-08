@@ -7,12 +7,11 @@ December 8, 2024
 
 from slugify import slugify  # type: ignore
 
-from aiotopicdb.topics.models.language import Language
-from aiotopicdb.topics.models.member import Member
-from aiotopicdb.topics.models.topic import Topic
-from aiotopicdb.topics.topicdberror import TopicDbError
-
-from ..constants import UNIVERSAL_SCOPE
+from aiotopicdb.constants import UNIVERSAL_SCOPE
+from aiotopicdb.models.language import Language
+from aiotopicdb.models.member import Member
+from aiotopicdb.models.topic import Topic
+from aiotopicdb.topicdberror import TopicDbError
 
 
 class Association(Topic):

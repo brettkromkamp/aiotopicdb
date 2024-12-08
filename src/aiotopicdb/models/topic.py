@@ -5,12 +5,11 @@ Brett Alistair Kromkamp - brettkromkamp@gmail.com
 December 8, 2024
 """
 
-from aiotopicdb.topics.models.basename import BaseName
-from aiotopicdb.topics.models.entity import Entity
-from aiotopicdb.topics.models.language import Language
-from aiotopicdb.topics.models.occurrence import Occurrence
-
-from ..constants import UNIVERSAL_SCOPE
+from aiotopicdb.constants import UNIVERSAL_SCOPE
+from aiotopicdb.models.basename import BaseName
+from aiotopicdb.models.entity import Entity
+from aiotopicdb.models.language import Language
+from aiotopicdb.models.occurrence import Occurrence
 
 
 class Topic(Entity):

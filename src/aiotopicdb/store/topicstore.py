@@ -13,20 +13,20 @@ from typing import Dict, Tuple
 
 import aiosqlite
 
-from aiotopicdb.topics.models.association import Association
-from aiotopicdb.topics.models.attribute import Attribute
-from aiotopicdb.topics.models.basename import BaseName
-from aiotopicdb.topics.models.collaborationmode import CollaborationMode
-from aiotopicdb.topics.models.datatype import DataType
-from aiotopicdb.topics.models.doublekeydict import DoubleKeyDict
-from aiotopicdb.topics.models.language import Language
-from aiotopicdb.topics.models.map import Map
-from aiotopicdb.topics.models.member import Member
-from aiotopicdb.topics.models.occurrence import Occurrence
-from aiotopicdb.topics.models.topic import Topic
-from aiotopicdb.topics.topicdberror import TopicDbError
+from aiotopicdb.constants import DATABASE_PATH, UNIVERSAL_SCOPE
+from aiotopicdb.models.association import Association
+from aiotopicdb.models.attribute import Attribute
+from aiotopicdb.models.basename import BaseName
+from aiotopicdb.models.collaborationmode import CollaborationMode
+from aiotopicdb.models.datatype import DataType
+from aiotopicdb.models.doublekeydict import DoubleKeyDict
+from aiotopicdb.models.language import Language
+from aiotopicdb.models.map import Map
+from aiotopicdb.models.member import Member
+from aiotopicdb.models.occurrence import Occurrence
+from aiotopicdb.models.topic import Topic
+from aiotopicdb.topicdberror import TopicDbError
 
-from ..constants import DATABASE_PATH, UNIVERSAL_SCOPE
 from .retrievalmode import RetrievalMode
 
 # endregion
@@ -114,8 +114,8 @@ class TopicStore:
         identifier: str,
         scope: str | None = None,
         language: Language | None = None,
-        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
-        resolve_occurrences: RetrievalMode = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
+        resolve_attributes: RetrievalMode | None = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
+        resolve_occurrences: RetrievalMode | None = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
     ) -> Association | None:
         result = None
         try:

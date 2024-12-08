@@ -7,11 +7,10 @@ December 8, 2024
 
 from slugify import slugify  # type: ignore
 
-from aiotopicdb.topics.models.entity import Entity
-from aiotopicdb.topics.models.language import Language
-from aiotopicdb.topics.topicdberror import TopicDbError
-
-from ..constants import UNIVERSAL_SCOPE
+from aiotopicdb.constants import UNIVERSAL_SCOPE
+from aiotopicdb.models.entity import Entity
+from aiotopicdb.models.language import Language
+from aiotopicdb.topicdberror import TopicDbError
 
 
 class Occurrence(Entity):

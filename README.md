@@ -1,6 +1,5 @@
 # Asynchronous TopicDB by Brett Kromkamp
-
-- Pending
+The `aiotopicdb` package is an asynchronous implementation of TopicDB with an accompanying FastAPI-based API.
 
 ## Feature Support
 

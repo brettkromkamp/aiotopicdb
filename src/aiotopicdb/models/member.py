@@ -9,7 +9,7 @@ import uuid
 
 from slugify import slugify  # type: ignore
 
-from aiotopicdb.topics.topicdberror import TopicDbError
+from aiotopicdb.topicdberror import TopicDbError
 
 
 class Member:

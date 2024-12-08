@@ -5,7 +5,7 @@ Brett Alistair Kromkamp - brettkromkamp@gmail.com
 December 8, 2024
 """
 
-from aiotopicdb.topics.models.collaborationmode import CollaborationMode
+from aiotopicdb.models.collaborationmode import CollaborationMode
 
 
 class Map:
