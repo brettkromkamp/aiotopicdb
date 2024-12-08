@@ -1,16 +1,27 @@
 """
-Map class. Part of the Contextualise (https://contextualise.dev) project.
-January 07, 2016
-Brett Alistair Kromkamp (brett.kromkamp@gmail.com)
+Part of the Contextualise AI (https://contextualise.dev) project
+
+Brett Alistair Kromkamp - brettkromkamp@gmail.com
+December 8, 2024
 """
 
 from aiotopicdb.topics.models.collaborationmode import CollaborationMode
 
 
 class Map:
-    def __init__(self, identifier: int, name: str, user_identifier: int = None, description: str = "",
-            image_path: str = "", initialised: bool = False, published: bool = False, promoted: bool = False,
-            owner: bool = None, collaboration_mode: CollaborationMode = None, ) -> None:
+    def __init__(
+        self,
+        identifier: int,
+        name: str,
+        user_identifier: int | None = None,
+        description: str = "",
+        image_path: str = "",
+        initialised: bool = False,
+        published: bool = False,
+        promoted: bool = False,
+        owner: bool | None = None,
+        collaboration_mode: CollaborationMode | None = None,
+    ) -> None:
         self.__identifier = identifier
         self.name = name
         self.user_identifier = user_identifier

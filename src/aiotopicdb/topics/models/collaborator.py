@@ -1,15 +1,21 @@
 """
-Collaborator class. Part of the Contextualise (https://contextualise.dev) project.
-April 08, 2020
-Brett Alistair Kromkamp (brett.kromkamp@gmail.com)
+Part of the Contextualise AI (https://contextualise.dev) project
+
+Brett Alistair Kromkamp - brettkromkamp@gmail.com
+December 8, 2024
 """
 
 from aiotopicdb.topics.models.collaborationmode import CollaborationMode
 
 
 class Collaborator:
-    def __init__(self, map_identifier: int, user_identifier: int, user_name: str,
-            collaboration_mode: CollaborationMode, ):
+    def __init__(
+        self,
+        map_identifier: int,
+        user_identifier: int,
+        user_name: str,
+        collaboration_mode: CollaborationMode,
+    ):
         self.__map_identifier = map_identifier
         self.__user_identifier = user_identifier
         self.__user_name = user_name

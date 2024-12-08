@@ -1,8 +1,8 @@
 """
-Attribute class. Part of the Contextualise (https://contextualise.dev) project.
+Part of the Contextualise AI (https://contextualise.dev) project
 
-June 12, 2016
-Brett Alistair Kromkamp (brettkromkamp@gmail.com)
+Brett Alistair Kromkamp - brettkromkamp@gmail.com
+December 8, 2024
 """
 
 import uuid
@@ -13,19 +13,19 @@ from aiotopicdb.topics.models.datatype import DataType
 from aiotopicdb.topics.models.language import Language
 from aiotopicdb.topics.topicdberror import TopicDbError
 
-UNIVERSAL_SCOPE = "*"
+from ..constants import UNIVERSAL_SCOPE
 
 
 class Attribute:
     def __init__(
-            self,
-            name: str,
-            value: str,
-            entity_identifier: str,
-            identifier: str = "",
-            data_type: DataType = DataType.STRING,
-            scope: str = UNIVERSAL_SCOPE,
-            language: Language = Language.ENG,
+        self,
+        name: str,
+        value: str,
+        entity_identifier: str,
+        identifier: str = "",
+        data_type: DataType = DataType.STRING,
+        scope: str = UNIVERSAL_SCOPE,
+        language: Language = Language.ENG,
     ) -> None:
         self.__entity_identifier = (
             entity_identifier if entity_identifier == UNIVERSAL_SCOPE else slugify(str(entity_identifier))

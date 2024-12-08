@@ -1,11 +1,9 @@
 """
-Occurrence class. Part of the Contextualise (https://contextualise.dev) project.
+Part of the Contextualise AI (https://contextualise.dev) project
 
-June 12, 2016
-Brett Alistair Kromkamp (brettkromkamp@gmail.com)
+Brett Alistair Kromkamp - brettkromkamp@gmail.com
+December 8, 2024
 """
-
-from typing import Optional, Union
 
 from slugify import slugify  # type: ignore
 
@@ -13,19 +11,19 @@ from aiotopicdb.topics.models.entity import Entity
 from aiotopicdb.topics.models.language import Language
 from aiotopicdb.topics.topicdberror import TopicDbError
 
-UNIVERSAL_SCOPE = "*"
+from ..constants import UNIVERSAL_SCOPE
 
 
 class Occurrence(Entity):
     def __init__(
-            self,
-            identifier: str = "",
-            instance_of: str = "occurrence",
-            topic_identifier: str = "",
-            scope: str = UNIVERSAL_SCOPE,
-            resource_ref: str = "",
-            resource_data: Optional[Union[str, bytes]] = None,
-            language: Language = Language.ENG,
+        self,
+        identifier: str = "",
+        instance_of: str = "occurrence",
+        topic_identifier: str = "",
+        scope: str = UNIVERSAL_SCOPE,
+        resource_ref: str = "",
+        resource_data: str | bytes | None = None,
+        language: Language = Language.ENG,
     ) -> None:
         super().__init__(identifier, instance_of)
 
@@ -34,12 +32,11 @@ class Occurrence(Entity):
         )
         self.__scope = scope if scope == UNIVERSAL_SCOPE else slugify(str(scope))
         self.resource_ref = resource_ref
+        self.__resource_data = None
         if resource_data:
             self.__resource_data = (
                 resource_data if isinstance(resource_data, bytes) else bytes(resource_data, encoding="utf-8")
             )
-        else:
-            self.__resource_data = None
 
         self.language = language
 
@@ -64,11 +61,11 @@ class Occurrence(Entity):
         self.__topic_identifier = value if value == UNIVERSAL_SCOPE else slugify(str(value))
 
     @property
-    def resource_data(self) -> Optional[Union[str, bytes]]:
+    def resource_data(self) -> str | bytes | None:
         return self.__resource_data
 
     @resource_data.setter
-    def resource_data(self, value: Union[str, bytes]) -> None:
+    def resource_data(self, value: str | bytes) -> None:
         self.__resource_data = value if isinstance(value, bytes) else bytes(value, encoding="utf-8")
 
     def has_data(self) -> bool:

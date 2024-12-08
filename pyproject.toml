@@ -1,6 +1,18 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+[project]
+name = "aiotopicdb"
+version = "0.1.0"
+description = "The aiotopicdb package is an asynchronous implementation of TopicDB with an accompanying FastAPI-based API"
+readme = "README.md"
+authors = [
+    { name = "Brett Kromkamp", email = "brettkromkamp@gmail.com" }
 ]
-build-backend = "setuptools.build_meta"
+requires-python = ">=3.13"
+dependencies = [
+    "aiosqlite>=0.20.0",
+    "fastapi>=0.115.6",
+    "typed-tree>=1.0.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

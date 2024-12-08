@@ -1,8 +1,8 @@
 """
-DoubleKeyDict(ionary) class. Part of the Contextualise (https://contextualise.dev) project.
+Part of the Contextualise AI (https://contextualise.dev) project
 
-July 02, 2016
-Brett Alistair Kromkamp (brettkromkamp@gmail.com)
+Brett Alistair Kromkamp - brettkromkamp@gmail.com
+December 8, 2024
 """
 
 

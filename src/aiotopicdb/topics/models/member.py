@@ -1,8 +1,8 @@
 """
-Member class. Part of the Contextualise (https://contextualise.dev) project.
+Part of the Contextualise AI (https://contextualise.dev) project
 
-July 03, 2016
-Brett Alistair Kromkamp (brettkromkamp@gmail.com)
+Brett Alistair Kromkamp - brettkromkamp@gmail.com
+December 8, 2024
 """
 
 import uuid
@@ -14,12 +14,12 @@ from aiotopicdb.topics.topicdberror import TopicDbError
 
 class Member:
     def __init__(
-            self,
-            src_topic_ref: str = "",
-            src_role_spec: str = "related",
-            dest_topic_ref: str = "",
-            dest_role_spec: str = "related",
-            identifier: str = "",
+        self,
+        src_topic_ref: str = "",
+        src_role_spec: str = "related",
+        dest_topic_ref: str = "",
+        dest_role_spec: str = "related",
+        identifier: str = "",
     ) -> None:
         if src_role_spec == "":
             raise TopicDbError("Empty 'src_role spec' parameter")
