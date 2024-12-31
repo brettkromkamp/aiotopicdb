@@ -576,8 +576,8 @@ class TopicStore:
 
         return result
 
-    async def get_topic_names(self, map_identifier: int, offset: int = 0, limit: int = 100) -> list[Tuple[str, str]]:
-        result: list[Tuple[str, str]] = []
+    async def get_topic_base_names(self, map_identifier: int, identifier: str) -> list[BaseName]:
+        result: list[BaseName] = []
         # TODO: Implement
         return result
 
@@ -694,13 +694,8 @@ class TopicStore:
         return result
 
     # endregion
+
     # region Collaboration
-    async def collaborate(self, map_identifier: int) -> None:
-        pass
-
-    async def stop_collaboration(self, map_identifier: int) -> None:
-        pass
-
     async def get_collaboration_mode(self, map_identifier: int, user_identifier: int) -> CollaborationMode | None:
         result = None
         try:
@@ -715,9 +710,6 @@ class TopicStore:
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error fetching collaboration mode: {error}")
         return result
-
-    async def update_collaboration_mode(self, map_identifier: int) -> None:
-        pass
 
     async def get_collaborators(self, map_identifier: int) -> None:
         pass
