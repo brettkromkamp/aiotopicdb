@@ -90,6 +90,234 @@ class TopicStore:
 
     # endregion
 
+    # region Topic
+    @staticmethod
+    def _normalize_topic_name(topic_identifier: str) -> str:
+        return " ".join([word.capitalize() for word in topic_identifier.split("-")])
+
+    async def get_topic(
+        self,
+        map_identifier: int,
+        identifier: str,
+        scope: str | None = None,
+        language: Language | None = None,
+        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
+        resolve_occurrences: RetrievalMode = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
+    ) -> Topic | None:
+        result = None
+        try:
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                async with db.execute(
+                    "SELECT identifier, instance_of FROM topic WHERE map_identifier = ? AND identifier = ?",
+                    (map_identifier, identifier),
+                ) as topic_cursor:
+                    async for topic_record in topic_cursor:
+                        result = Topic(topic_record["identifier"], topic_record["instance_of"])
+                        # Base names
+                        result.clear_base_names()
+                        # TODO: Add base names
+                        # Attributes
+                        if resolve_attributes and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES:
+                            result.add_attributes(await self.get_attributes(map_identifier, identifier, scope=scope))
+                        # Occurrences
+                        if resolve_occurrences and resolve_occurrences is RetrievalMode.RESOLVE_OCCURRENCES:
+                            result.add_occurrences(
+                                await self.get_topic_occurrences(map_identifier, identifier, scope=scope)
+                            )
+        except aiosqlite.Error as error:
+            raise TopicDbError(f"Error fetching topic: {error}")
+        return result
+
+    async def get_related_topics(
+        self,
+        map_identifier: int,
+        identifier: str,
+        instance_ofs: list[str] | None = None,
+        scope: str | None = None,
+    ) -> list[Topic]:
+        result: list[Topic] = []
+
+        associations = await self.get_topic_associations(
+            map_identifier, identifier, instance_ofs=instance_ofs, scope=scope
+        )
+        if associations:
+            groups = await self.get_association_groups(map_identifier, identifier, associations=associations)
+            for instance_of in groups.dict:
+                for role in groups.dict[instance_of]:
+                    for topic_ref in groups[instance_of, role]:
+                        if topic_ref == identifier:
+                            continue
+                        topic = await self.get_topic(map_identifier, topic_ref)
+                        if topic:
+                            result.append(topic)
+        return result
+
+    async def get_topic_associations(
+        self,
+        map_identifier: int,
+        identifier: str,
+        instance_ofs: list[str] | None = None,
+        scope: str | None = None,
+        language: Language | None = None,
+        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
+        resolve_occurrences: RetrievalMode = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
+    ) -> list[Association]:
+        result: list[Association] = []
+
+        sql = """SELECT identifier FROM topic WHERE map_identifier = ? {0} AND
+                identifier IN
+                    (SELECT association_identifier FROM member
+                     WHERE map_identifier = ? AND (src_topic_ref = ? OR dest_topic_ref = ?))"""
+        if instance_ofs:
+            instance_of_in_condition = " AND instance_of IN ("
+            for index, value in enumerate(instance_ofs):
+                if (index + 1) != len(instance_ofs):
+                    instance_of_in_condition += "?, "
+                else:
+                    instance_of_in_condition += "?) "
+            if scope:
+                query_filter = instance_of_in_condition + " AND scope = ? "
+                bind_variables = (
+                    (map_identifier,) + tuple(instance_ofs) + (scope, map_identifier, identifier, identifier)
+                )
+            else:
+                query_filter = instance_of_in_condition
+                bind_variables = (map_identifier,) + tuple(instance_ofs) + (map_identifier, identifier, identifier)
+        else:
+            if scope:
+                query_filter = " AND scope = ?"
+                bind_variables = (
+                    map_identifier,
+                    scope,
+                    map_identifier,
+                    identifier,
+                    identifier,
+                )
+            else:
+                query_filter = ""
+                bind_variables = (
+                    map_identifier,
+                    map_identifier,
+                    identifier,
+                    identifier,
+                )
+        try:
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                async with db.execute(sql.format(query_filter), bind_variables) as cursor:
+                    async for record in cursor:
+                        association = await self.get_association(
+                            map_identifier,
+                            record["identifier"],
+                            language=language,
+                            resolve_attributes=resolve_attributes,
+                            resolve_occurrences=resolve_occurrences,
+                        )
+                        if association:
+                            result.append(association)
+        except aiosqlite.Error as error:
+            raise TopicDbError(f"Error fetching associations: {error}")
+
+        return result
+
+    async def get_topic_occurrences(
+        self,
+        map_identifier: int,
+        identifier: str,
+        instance_of: str | None = None,
+        scope: str | None = None,
+        language: Language | None = None,
+        inline_resource_data: RetrievalMode = RetrievalMode.DONT_INLINE_RESOURCE_DATA,
+        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
+    ) -> list[Occurrence]:
+        result: list[Occurrence] = []
+
+        sql = """SELECT identifier, instance_of, scope, resource_ref, topic_identifier, language
+            FROM occurrence
+            WHERE map_identifier = ? AND
+            topic_identifier = ?
+            {0}
+            ORDER BY instance_of, scope, language"""
+        if instance_of:
+            if scope:
+                if language:
+                    query_filter = " AND instance_of = ? AND scope = ? AND language = ?"
+                    bind_variables = (
+                        map_identifier,
+                        identifier,
+                        instance_of,
+                        scope,
+                        language.name.lower(),
+                    )
+                else:
+                    query_filter = " AND instance_of = ? AND scope = ?"
+                    bind_variables = (map_identifier, identifier, instance_of, scope)  # type: ignore
+            else:
+                if language:
+                    query_filter = " AND instance_of = ? AND language = ?"
+                    bind_variables = (
+                        map_identifier,
+                        identifier,
+                        instance_of,
+                        language.name.lower(),
+                    )  # type: ignore
+                else:
+                    query_filter = " AND instance_of = ?"
+                    bind_variables = (map_identifier, identifier, instance_of)  # type: ignore
+        else:
+            if scope:
+                if language:
+                    query_filter = " AND scope = ? AND language = ?"
+                    bind_variables = (
+                        map_identifier,
+                        identifier,
+                        scope,
+                        language.name.lower(),
+                    )  # type: ignore
+                else:
+                    query_filter = " AND scope = ?"
+                    bind_variables = (map_identifier, identifier, scope)  # type: ignore
+            else:
+                if language:
+                    query_filter = " AND language = ?"
+                    bind_variables = (map_identifier, identifier, language.name.lower())  # type: ignore
+                else:
+                    query_filter = ""
+                    bind_variables = (map_identifier, identifier)  # type: ignore
+        try:
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                async with db.execute(sql.format(query_filter), bind_variables) as cursor:
+                    async for record in cursor:
+                        resource_data = None
+                        if inline_resource_data and inline_resource_data is RetrievalMode.INLINE_RESOURCE_DATA:
+                            resource_data = await self.get_occurrence_data(map_identifier, record["identifier"])
+                        occurrence = Occurrence(
+                            record["identifier"],
+                            record["instance_of"],
+                            record["topic_identifier"],
+                            record["scope"],
+                            record["resource_ref"],
+                            resource_data,  # Type: bytes
+                            Language[record["language"].upper()],
+                        )
+                        if resolve_attributes and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES:
+                            occurrence.add_attributes(await self.get_attributes(map_identifier, occurrence.identifier))
+                        result.append(occurrence)
+        except aiosqlite.Error as error:
+            raise TopicDbError(f"Error fetching occurrences: {error}")
+        return result
+
+    # endregion
+
+    # region BaseName
+    async def get_topic_base_names(self, map_identifier: int, identifier: str) -> list[BaseName]:
+        result: list[BaseName] = []
+        # TODO: Implement
+        return result
+    # endregion
+
     # region Association
     @staticmethod
     def _resolve_topic_refs(association: Association) -> list[TopicRefs]:
@@ -211,6 +439,62 @@ class TopicStore:
 
     # endregion
 
+    # region Occurrence
+    async def get_occurrence(
+        self,
+        map_identifier: int,
+        identifier: str,
+        inline_resource_data: RetrievalMode = RetrievalMode.DONT_INLINE_RESOURCE_DATA,
+        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
+    ) -> Occurrence | None:
+        result = None
+        try:
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                async with db.execute(
+                    "SELECT identifier, instance_of, scope, resource_ref, topic_identifier, language FROM occurrence WHERE map_identifier = ? AND identifier = ?",
+                    (map_identifier, identifier),
+                ) as cursor:
+                    async for record in cursor:
+                        resource_data = None
+                        if (
+                            inline_resource_data
+                            and inline_resource_data.value is RetrievalMode.INLINE_RESOURCE_DATA.value
+                        ):
+                            resource_data = await self.get_occurrence_data(map_identifier, identifier)
+                        result = Occurrence(
+                            record["identifier"],
+                            record["instance_of"],
+                            record["topic_identifier"],
+                            record["scope"],
+                            record["resource_ref"],
+                            resource_data,  # Type: bytes
+                            Language[record["language"].upper()],
+                        )
+                        if resolve_attributes and resolve_attributes.value is RetrievalMode.RESOLVE_ATTRIBUTES.value:
+                            result.add_attributes(await self.get_attributes(map_identifier, identifier))
+        except aiosqlite.Error as error:
+            raise TopicDbError(f"Error fetching occurrence: {error}")
+        return result
+
+    async def get_occurrence_data(self, map_identifier: int, identifier: str) -> bytes | None:
+        result = None
+        try:
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                async with db.execute(
+                    "SELECT resource_data FROM occurrence WHERE map_identifier = ? AND identifier = ?",
+                    (map_identifier, identifier),
+                ) as cursor:
+                    async for record in cursor:
+                        if record["resource_data"] is not None:
+                            result = record["resource_data"]  # Type: bytes
+        except aiosqlite.Error as error:
+            raise TopicDbError(f"Error fetching occurrence data: {error}")
+        return result
+
+    # endregion
+
     # region Attribute
     async def attribute_exists(
         self, map_identifier: int, entity_identifier: str, name: str
@@ -310,92 +594,6 @@ class TopicStore:
 
     # endregion
 
-    # region Occurrence
-    async def get_occurrence(
-        self,
-        map_identifier: int,
-        identifier: str,
-        inline_resource_data: RetrievalMode = RetrievalMode.DONT_INLINE_RESOURCE_DATA,
-        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
-    ) -> Occurrence | None:
-        result = None
-        try:
-            async with aiosqlite.connect(self.database_path) as db:
-                db.row_factory = aiosqlite.Row
-                async with db.execute(
-                    "SELECT identifier, instance_of, scope, resource_ref, topic_identifier, language FROM occurrence WHERE map_identifier = ? AND identifier = ?",
-                    (map_identifier, identifier),
-                ) as cursor:
-                    async for record in cursor:
-                        resource_data = None
-                        if (
-                            inline_resource_data
-                            and inline_resource_data
-                            is RetrievalMode.INLINE_RESOURCE_DATA
-                        ):
-                            resource_data = await self.get_occurrence_data(
-                                map_identifier, identifier
-                            )
-                        result = Occurrence(
-                            record["identifier"],
-                            record["instance_of"],
-                            record["topic_identifier"],
-                            record["scope"],
-                            record["resource_ref"],
-                            resource_data,  # Type: bytes
-                            Language[record["language"].upper()],
-                        )
-                        if (
-                            resolve_attributes
-                            and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
-                        ):
-                            result.add_attributes(
-                                await self.get_attributes(map_identifier, identifier)
-                            )
-        except aiosqlite.Error as error:
-            raise TopicDbError(f"Error fetching occurrence: {error}")
-        return result
-
-    async def get_occurrence_data(
-        self, map_identifier: int, identifier: str
-    ) -> bytes | None:
-        result = None
-        try:
-            async with aiosqlite.connect(self.database_path) as db:
-                db.row_factory = aiosqlite.Row
-                async with db.execute(
-                    "SELECT resource_data FROM occurrence WHERE map_identifier = ? AND identifier = ?",
-                    (map_identifier, identifier),
-                ) as cursor:
-                    async for record in cursor:
-                        if record["resource_data"] is not None:
-                            result = record["resource_data"]  # Type: bytes
-        except aiosqlite.Error as error:
-            raise TopicDbError(f"Error fetching occurrence data: {error}")
-        return result
-
-    async def get_occurrences(
-        self,
-        map_identifier: int,
-        instance_of: str | None = None,
-        scope: str | None = None,
-        language: Language | None = None,
-        offset: int = 0,
-        limit: int = 100,
-        inline_resource_data: RetrievalMode = RetrievalMode.DONT_INLINE_RESOURCE_DATA,
-        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
-    ) -> list[Occurrence]:
-        result: list[Occurrence] = []
-        # TODO: Implement
-        return result
-
-    async def occurrence_exists(self, map_identifier: int, identifier: str) -> bool:
-        result = False
-        # TODO: Implement
-        return result
-
-    # endregion
-
     # region Tag
     async def get_tags(self, map_identifier: int, identifier: str) -> list[str]:
         result: list[str] = []
@@ -412,284 +610,6 @@ class TopicStore:
                             continue
                         if instance_of == "categorization":
                             result.append(topic_ref)
-        return result
-
-    # endregion
-
-    # region Topic
-    @staticmethod
-    def _normalize_topic_name(topic_identifier: str) -> str:
-        return " ".join([word.capitalize() for word in topic_identifier.split("-")])
-
-    async def get_related_topics(
-        self,
-        map_identifier: int,
-        identifier: str,
-        instance_ofs: list[str] | None = None,
-        scope: str | None = None,
-    ) -> list[Topic]:
-        result: list[Topic] = []
-
-        associations = await self.get_topic_associations(
-            map_identifier, identifier, instance_ofs=instance_ofs, scope=scope
-        )
-        if associations:
-            groups = await self.get_association_groups(
-                map_identifier, identifier, associations=associations
-            )
-            for instance_of in groups.dict:
-                for role in groups.dict[instance_of]:
-                    for topic_ref in groups[instance_of, role]:
-                        if topic_ref == identifier:
-                            continue
-                        topic = await self.get_topic(map_identifier, topic_ref)
-                        if topic:
-                            result.append(topic)
-        return result
-
-    async def get_topic(
-        self,
-        map_identifier: int,
-        identifier: str,
-        scope: str | None = None,
-        language: Language | None = None,
-        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
-        resolve_occurrences: RetrievalMode = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
-    ) -> Topic | None:
-        result = None
-        try:
-            async with aiosqlite.connect(self.database_path) as db:
-                db.row_factory = aiosqlite.Row
-                async with db.execute(
-                    "SELECT identifier, instance_of FROM topic WHERE map_identifier = ? AND identifier = ?",
-                    (map_identifier, identifier),
-                ) as topic_cursor:
-                    async for topic_record in topic_cursor:
-                        result = Topic(
-                            topic_record["identifier"], topic_record["instance_of"]
-                        )
-                        # Base names
-                        result.clear_base_names()
-                        # TODO: Add base names
-                        # Attributes
-                        if (
-                            resolve_attributes
-                            and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
-                        ):
-                            result.add_attributes(
-                                await self.get_attributes(
-                                    map_identifier, identifier, scope=scope
-                                )
-                            )
-                        # Occurrences
-                        if (
-                            resolve_occurrences
-                            and resolve_occurrences is RetrievalMode.RESOLVE_OCCURRENCES
-                        ):
-                            result.add_occurrences(
-                                await self.get_topic_occurrences(
-                                    map_identifier, identifier, scope=scope
-                                )
-                            )
-        except aiosqlite.Error as error:
-            raise TopicDbError(f"Error fetching topic: {error}")
-        return result
-
-    async def get_topic_occurrences(
-        self,
-        map_identifier: int,
-        identifier: str,
-        instance_of: str | None = None,
-        scope: str | None = None,
-        language: Language | None = None,
-        inline_resource_data: RetrievalMode = RetrievalMode.DONT_INLINE_RESOURCE_DATA,
-        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
-    ) -> list[Occurrence]:
-        result: list[Occurrence] = []
-
-        sql = """SELECT identifier, instance_of, scope, resource_ref, topic_identifier, language
-            FROM occurrence
-            WHERE map_identifier = ? AND
-            topic_identifier = ?
-            {0}
-            ORDER BY instance_of, scope, language"""
-        if instance_of:
-            if scope:
-                if language:
-                    query_filter = " AND instance_of = ? AND scope = ? AND language = ?"
-                    bind_variables = (
-                        map_identifier,
-                        identifier,
-                        instance_of,
-                        scope,
-                        language.name.lower(),
-                    )
-                else:
-                    query_filter = " AND instance_of = ? AND scope = ?"
-                    bind_variables = (map_identifier, identifier, instance_of, scope)  # type: ignore
-            else:
-                if language:
-                    query_filter = " AND instance_of = ? AND language = ?"
-                    bind_variables = (
-                        map_identifier,
-                        identifier,
-                        instance_of,
-                        language.name.lower(),
-                    )  # type: ignore
-                else:
-                    query_filter = " AND instance_of = ?"
-                    bind_variables = (map_identifier, identifier, instance_of)  # type: ignore
-        else:
-            if scope:
-                if language:
-                    query_filter = " AND scope = ? AND language = ?"
-                    bind_variables = (
-                        map_identifier,
-                        identifier,
-                        scope,
-                        language.name.lower(),
-                    )  # type: ignore
-                else:
-                    query_filter = " AND scope = ?"
-                    bind_variables = (map_identifier, identifier, scope)  # type: ignore
-            else:
-                if language:
-                    query_filter = " AND language = ?"
-                    bind_variables = (map_identifier, identifier, language.name.lower())  # type: ignore
-                else:
-                    query_filter = ""
-                    bind_variables = (map_identifier, identifier)  # type: ignore
-        try:
-            async with aiosqlite.connect(self.database_path) as db:
-                db.row_factory = aiosqlite.Row
-                async with db.execute(
-                    sql.format(query_filter), bind_variables
-                ) as cursor:
-                    async for record in cursor:
-                        resource_data = None
-                        if (
-                            inline_resource_data
-                            and inline_resource_data
-                            is RetrievalMode.INLINE_RESOURCE_DATA
-                        ):
-                            resource_data = await self.get_occurrence_data(
-                                map_identifier, record["identifier"]
-                            )
-                        occurrence = Occurrence(
-                            record["identifier"],
-                            record["instance_of"],
-                            record["topic_identifier"],
-                            record["scope"],
-                            record["resource_ref"],
-                            resource_data,  # Type: bytes
-                            Language[record["language"].upper()],
-                        )
-                        if (
-                            resolve_attributes
-                            and resolve_attributes is RetrievalMode.RESOLVE_ATTRIBUTES
-                        ):
-                            occurrence.add_attributes(
-                                await self.get_attributes(
-                                    map_identifier, occurrence.identifier
-                                )
-                            )
-                        result.append(occurrence)
-        except aiosqlite.Error as error:
-            raise TopicDbError(f"Error fetching occurrences: {error}")
-        return result
-
-    async def get_topic_associations(
-        self,
-        map_identifier: int,
-        identifier: str,
-        instance_ofs: list[str] | None = None,
-        scope: str | None = None,
-        language: Language | None = None,
-        resolve_attributes: RetrievalMode = RetrievalMode.DONT_RESOLVE_ATTRIBUTES,
-        resolve_occurrences: RetrievalMode = RetrievalMode.DONT_RESOLVE_OCCURRENCES,
-    ) -> list[Association]:
-        result: list[Association] = []
-
-        sql = """SELECT identifier FROM topic WHERE map_identifier = ? {0} AND
-                identifier IN
-                    (SELECT association_identifier FROM member
-                     WHERE map_identifier = ? AND (src_topic_ref = ? OR dest_topic_ref = ?))"""
-        if instance_ofs:
-            instance_of_in_condition = " AND instance_of IN ("
-            for index, value in enumerate(instance_ofs):
-                if (index + 1) != len(instance_ofs):
-                    instance_of_in_condition += "?, "
-                else:
-                    instance_of_in_condition += "?) "
-            if scope:
-                query_filter = instance_of_in_condition + " AND scope = ? "
-                bind_variables = (
-                    (map_identifier,)
-                    + tuple(instance_ofs)
-                    + (scope, map_identifier, identifier, identifier)
-                )
-            else:
-                query_filter = instance_of_in_condition
-                bind_variables = (
-                    (map_identifier,)
-                    + tuple(instance_ofs)
-                    + (map_identifier, identifier, identifier)
-                )
-        else:
-            if scope:
-                query_filter = " AND scope = ?"
-                bind_variables = (
-                    map_identifier,
-                    scope,
-                    map_identifier,
-                    identifier,
-                    identifier,
-                )
-            else:
-                query_filter = ""
-                bind_variables = (
-                    map_identifier,
-                    map_identifier,
-                    identifier,
-                    identifier,
-                )
-        try:
-            async with aiosqlite.connect(self.database_path) as db:
-                db.row_factory = aiosqlite.Row
-                async with db.execute(
-                    sql.format(query_filter), bind_variables
-                ) as cursor:
-                    async for record in cursor:
-                        association = await self.get_association(
-                            map_identifier,
-                            record["identifier"],
-                            language=language,
-                            resolve_attributes=resolve_attributes,
-                            resolve_occurrences=resolve_occurrences,
-                        )
-                        if association:
-                            result.append(association)
-        except aiosqlite.Error as error:
-            raise TopicDbError(f"Error fetching associations: {error}")
-
-        return result
-
-    async def get_topic_associations_count(
-        self,
-        map_identifier: int,
-        identifier: str,
-        instance_ofs: list[str] | None = None,
-        scope: str | None = None,
-    ) -> int:
-        result = 0
-        # TODO: Implement
-        return result
-
-    async def get_topic_names(
-        self, map_identifier: int, offset: int = 0, limit: int = 100
-    ) -> list[Tuple[str, str]]:
-        result: list[Tuple[str, str]] = []
-        # TODO: Implement
         return result
 
     # endregion
@@ -817,16 +737,9 @@ class TopicStore:
         return result
 
     # endregion
+
     # region Collaboration
-    async def collaborate(self, map_identifier: int) -> None:
-        pass
-
-    async def stop_collaboration(self, map_identifier: int) -> None:
-        pass
-
-    async def get_collaboration_mode(
-        self, map_identifier: int, user_identifier: int
-    ) -> CollaborationMode | None:
+    async def get_collaboration_mode(self, map_identifier: int, user_identifier: int) -> CollaborationMode | None:
         result = None
         try:
             async with aiosqlite.connect(self.database_path) as db:
@@ -840,9 +753,6 @@ class TopicStore:
         except aiosqlite.Error as error:
             raise TopicDbError(f"Error fetching collaboration mode: {error}")
         return result
-
-    async def update_collaboration_mode(self, map_identifier: int) -> None:
-        pass
 
     async def get_collaborators(self, map_identifier: int) -> None:
         pass
